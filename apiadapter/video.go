@@ -1,27 +1,31 @@
 package apiadapter
 
 import (
+	"google.golang.org/api/youtube/v3"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 type Video struct {
-	Id                string
-	DurationInSeconds int
-	CategoryId        string
-	channelTitle      string
-	DefaultLanguage   string
-	Description       string
-	PublishedAt       string
-	TagsList          string
-	Title             string
-	CommentCount      uint64
-	DislikeCount      uint64
-	FavoriteCount     uint64
-	LikeCount         uint64
-	ViewCount         uint64
-	TopicCategories   []string
+	Id                   string
+	DurationInSeconds    int
+	CategoryId           string
+	channelTitle         string
+	DefaultLanguage      string
+	Description          string
+	PublishedAt          string
+	TagsList             string
+	Title                string
+	TopicCategories      []string
+	CommentCount         uint64
+	LikeDislikeRatio     float64
+	ViewReaktionRatio    float64
+	DislikeCount         uint64
+	LikeCount            uint64
+	ViewCount            uint64
+	Subscribers          uint64
+	ViewSubscriberRation float64
 }
 
 func GetVideoData(devKey string, videoIds []string) map[string]*Video {
@@ -30,31 +34,54 @@ func GetVideoData(devKey string, videoIds []string) map[string]*Video {
 	if err != nil {
 		panic(err)
 	}
+	//map video response to the video struct
 	results := make(map[string]*Video)
 	for _, vid := range response.Items {
-		categories := make([]string, 0)
-		if vid.TopicDetails != nil {
-			categories = vid.TopicDetails.TopicCategories
-		}
-		results[vid.Id] = &Video{
-			Id:                vid.Id,
-			DurationInSeconds: convertDuration(vid.ContentDetails.Duration),
-			CategoryId:        vid.Snippet.CategoryId,
-			channelTitle:      vid.Snippet.ChannelTitle,
-			DefaultLanguage:   vid.Snippet.DefaultLanguage,
-			Description:       vid.Snippet.Description,
-			PublishedAt:       vid.Snippet.PublishedAt,
-			TagsList:          strings.Join(vid.Snippet.Tags, ","),
-			Title:             vid.Snippet.Title,
-			CommentCount:      vid.Statistics.CommentCount,
-			DislikeCount:      vid.Statistics.DislikeCount,
-			FavoriteCount:     vid.Statistics.FavoriteCount,
-			LikeCount:         vid.Statistics.LikeCount,
-			ViewCount:         vid.Statistics.ViewCount,
-			TopicCategories:   categories,
-		}
+		results[vid.Id] = getVideoFromResponse(vid)
+	}
+	//get Subscription data
+	channelIdsToVideo := make(map[string]string, len(videoIds))
+	channelIds := make([]string, len(videoIds))
+	for i, vid := range response.Items {
+		channelIdsToVideo[vid.Snippet.ChannelId] = vid.Id
+		channelIds[i] = vid.Snippet.ChannelId
+	}
+	channelResponse, err := client.Channels.List("statistics").Id(strings.Join(channelIds, ",")).Do()
+	if err != nil {
+		panic(err)
+	}
+	for _, channel := range channelResponse.Items {
+		id := channelIdsToVideo[channel.Id]
+		results[id].Subscribers = channel.Statistics.SubscriberCount
+		results[id].ViewSubscriberRation = float64(results[id].ViewCount) / float64(channel.Statistics.SubscriberCount)
 	}
 	return results
+}
+
+func getVideoFromResponse(vid *youtube.Video) *Video {
+	categories := make([]string, 0)
+	if vid.TopicDetails != nil {
+		categories = vid.TopicDetails.TopicCategories
+	}
+	video := &Video{
+		Id:                vid.Id,
+		DurationInSeconds: convertDuration(vid.ContentDetails.Duration),
+		CategoryId:        vid.Snippet.CategoryId,
+		channelTitle:      vid.Snippet.ChannelTitle,
+		DefaultLanguage:   vid.Snippet.DefaultLanguage,
+		Description:       vid.Snippet.Description,
+		PublishedAt:       vid.Snippet.PublishedAt,
+		TagsList:          strings.Join(vid.Snippet.Tags, ","),
+		Title:             vid.Snippet.Title,
+		TopicCategories:   categories, CommentCount: vid.Statistics.CommentCount,
+		DislikeCount: vid.Statistics.DislikeCount,
+		LikeCount:    vid.Statistics.LikeCount,
+		ViewCount:    vid.Statistics.ViewCount,
+	}
+	video.LikeDislikeRatio = float64(video.LikeCount) / float64(video.DislikeCount)
+	video.ViewReaktionRatio = float64(video.ViewCount) / float64(video.LikeCount+video.DislikeCount)
+
+	return video
 }
 
 func convertDuration(duration string) int {

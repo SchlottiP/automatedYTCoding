@@ -77,15 +77,16 @@ func listAllVideos(listCommand *flag.FlagSet, fileData *flag.FlagSet, query *str
 		}
 		after = &time
 	}
-	videos := apiadapter.List(developerKey, *query, *maxResults, after)
+	videos := apiadapter.List(developerKey, *query, *maxResults, after, false)
 	ids := make([]string, len(videos))
 	for i, vid := range videos {
 		ids[i] = vid.Id.VideoId
 	}
-	path, err := filepath.Abs(*resultPath + "/result.csv")
+	path, err := filepath.Abs(*resultPath + "/result" + time.Now().Format("02-01-2006-15_04_05") + ".csv")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("query %v", *query)
 	fmt.Printf("resultFile: %v", path)
 	csv.CreateCSV(path, apiadapter.GetVideoData(developerKey, ids))
 }
@@ -127,5 +128,5 @@ func list(listCommand *flag.FlagSet, query *string, publishedAfter *string, maxR
 		}
 		after = &time
 	}
-	apiadapter.PrintIDs(apiadapter.List(developerKey, *query, *maxResults, after))
+	apiadapter.PrintIDs(apiadapter.List(developerKey, *query, *maxResults, after, true))
 }

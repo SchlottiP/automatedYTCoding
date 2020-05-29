@@ -48,6 +48,8 @@ func getData(val reflect.Value, index int) string {
 		return strconv.FormatInt(int64(val.Field(index).Uint()), 10)
 	case reflect.Int:
 		return strconv.FormatInt(val.Field(index).Int(), 10)
+	case reflect.Float64:
+		return strconv.FormatFloat(val.Field(index).Float(), 'f', 6, 64)
 	case reflect.Slice:
 		{
 			sliceData := make([]string, val.Field(index).Len())

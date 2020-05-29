@@ -1,6 +1,7 @@
 package apiadapter
 
 import (
+	"fmt"
 	"google.golang.org/api/youtube/v3"
 	"regexp"
 	"strconv"
@@ -10,17 +11,16 @@ import (
 type Video struct {
 	Id                   string
 	DurationInSeconds    int
-	CategoryId           string
+	Category             string
 	channelTitle         string
-	DefaultLanguage      string
+	Language             string
 	Description          string
 	PublishedAt          string
 	TagsList             string
 	Title                string
-	TopicCategories      []string
 	CommentCount         uint64
 	LikeDislikeRatio     float64
-	ViewReaktionRatio    float64
+	ViewReactionRatio    float64
 	DislikeCount         uint64
 	LikeCount            uint64
 	ViewCount            uint64
@@ -34,10 +34,11 @@ func GetVideoData(devKey string, videoIds []string) map[string]*Video {
 	if err != nil {
 		panic(err)
 	}
+	categories := make(map[string]string)
 	//map video response to the video struct
 	results := make(map[string]*Video)
 	for _, vid := range response.Items {
-		results[vid.Id] = getVideoFromResponse(vid)
+		results[vid.Id], categories = getVideoFromResponse(vid, categories, client)
 	}
 	//get Subscription data
 	channelIdsToVideo := make(map[string]string, len(videoIds))
@@ -55,33 +56,38 @@ func GetVideoData(devKey string, videoIds []string) map[string]*Video {
 		results[id].Subscribers = channel.Statistics.SubscriberCount
 		results[id].ViewSubscriberRation = float64(results[id].ViewCount) / float64(channel.Statistics.SubscriberCount)
 	}
+
 	return results
 }
 
-func getVideoFromResponse(vid *youtube.Video) *Video {
-	categories := make([]string, 0)
-	if vid.TopicDetails != nil {
-		categories = vid.TopicDetails.TopicCategories
+func getVideoFromResponse(vid *youtube.Video, categories map[string]string, client *youtube.Service) (*Video, map[string]string) {
+	if _, in := categories[vid.Snippet.CategoryId]; !in {
+		catResp, err := client.VideoCategories.List("snippet").Id(vid.Snippet.CategoryId).Do()
+		if err != nil {
+			fmt.Errorf("error getting categorie for video %v %v", vid.Id, err)
+		}
+		categories[vid.Snippet.CategoryId] = catResp.Items[0].Snippet.Title
+
 	}
 	video := &Video{
 		Id:                vid.Id,
 		DurationInSeconds: convertDuration(vid.ContentDetails.Duration),
-		CategoryId:        vid.Snippet.CategoryId,
 		channelTitle:      vid.Snippet.ChannelTitle,
-		DefaultLanguage:   vid.Snippet.DefaultLanguage,
+		Language:          vid.Snippet.DefaultAudioLanguage,
 		Description:       vid.Snippet.Description,
 		PublishedAt:       vid.Snippet.PublishedAt,
 		TagsList:          strings.Join(vid.Snippet.Tags, ","),
 		Title:             vid.Snippet.Title,
-		TopicCategories:   categories, CommentCount: vid.Statistics.CommentCount,
-		DislikeCount: vid.Statistics.DislikeCount,
-		LikeCount:    vid.Statistics.LikeCount,
-		ViewCount:    vid.Statistics.ViewCount,
+		Category:          categories[vid.Snippet.CategoryId],
+		CommentCount:      vid.Statistics.CommentCount,
+		DislikeCount:      vid.Statistics.DislikeCount,
+		LikeCount:         vid.Statistics.LikeCount,
+		ViewCount:         vid.Statistics.ViewCount,
 	}
 	video.LikeDislikeRatio = float64(video.LikeCount) / float64(video.DislikeCount)
-	video.ViewReaktionRatio = float64(video.ViewCount) / float64(video.LikeCount+video.DislikeCount)
+	video.ViewReactionRatio = float64(video.ViewCount) / float64(video.LikeCount+video.DislikeCount)
 
-	return video
+	return video, categories
 }
 
 func convertDuration(duration string) int {

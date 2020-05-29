@@ -7,14 +7,20 @@ import (
 	"net/http"
 )
 
+var client *youtube.Service
+
 func GetClient(developerKey string) *youtube.Service {
-	client := &http.Client{
+	if client != nil {
+		return client
+	}
+	c := &http.Client{
 		Transport: &transport.APIKey{Key: developerKey},
 	}
-	service, err := youtube.New(client)
+	client, err := youtube.New(c)
 	if err != nil {
 		fmt.Errorf("Error creating new YouTube client: %v", err)
 		panic(err)
 	}
-	return service
+	return client
+
 }

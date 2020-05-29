@@ -9,13 +9,17 @@ import (
 
 // List uses keywords, maxResult and if present publishedAfter
 // Defaults: order for viewCount, videoduration medium (4-20 min), relevance language: English
-func List(developerKey string, keywords string, maxResult int64, publishedAfter *time.Time) []*youtube.SearchResult {
+func List(developerKey string, keywords string, maxResult int64, publishedAfter *time.Time, toPrint bool) []*youtube.SearchResult {
 
 	service := GetClient(developerKey)
 
 	// Make the API call to YouTube.
-	call := service.Search.List("id,snippet").
-		Q(keywords).MaxResults(maxResult).Order("viewCount").VideoDuration("medium").RelevanceLanguage("en").Type("video")
+	part := "id"
+	if toPrint {
+		part += ",snippet"
+	}
+	call := service.Search.List(part).
+		Q(keywords).Order("viewCount").VideoDuration("medium").RelevanceLanguage("en").Type("video")
 	if publishedAfter != nil {
 		fmt.Printf("after: %v %v", publishedAfter.Format(time.RFC822), publishedAfter.Format(time.RFC3339))
 		call.PublishedAfter(publishedAfter.Format(time.RFC3339))
@@ -24,7 +28,24 @@ func List(developerKey string, keywords string, maxResult int64, publishedAfter 
 	if err != nil {
 		log.Fatalf("Error requesting Api: %v", err)
 	}
-	return response.Items
+	if response.PageInfo.ResultsPerPage >= maxResult {
+		return response.Items
+	}
+	var results []*youtube.SearchResult
+	results = append(results, response.Items...)
+	for int64(len(results)) < maxResult {
+		response, err = call.PageToken(response.NextPageToken).Do()
+		if err != nil {
+			log.Fatalf("Error requesting Api: %v", err)
+		}
+		missing := maxResult - int64(len(results))
+		if missing >= response.PageInfo.ResultsPerPage {
+			results = append(results, response.Items...)
+		} else {
+			results = append(results, response.Items[0:missing]...)
+		}
+	}
+	return results
 }
 
 func PrintIDs(items []*youtube.SearchResult) {

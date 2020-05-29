@@ -29,29 +29,22 @@ type Video struct {
 }
 
 func GetVideoData(devKey string, videoIds []string) map[string]*Video {
-	client := GetClient(devKey)
-	response, err := client.Videos.List("snippet,contentDetails,statistics, topicDetails").Id(strings.Join(videoIds, ",")).Do()
-	if err != nil {
-		panic(err)
-	}
+	client, videos := getVideos(devKey, videoIds)
 	categories := make(map[string]string)
 	//map video response to the video struct
 	results := make(map[string]*Video)
-	for _, vid := range response.Items {
+	for _, vid := range videos {
 		results[vid.Id], categories = getVideoFromResponse(vid, categories, client)
 	}
 	//get Subscription data
 	channelIdsToVideo := make(map[string]string, len(videoIds))
 	channelIds := make([]string, len(videoIds))
-	for i, vid := range response.Items {
+	for i, vid := range videos {
 		channelIdsToVideo[vid.Snippet.ChannelId] = vid.Id
 		channelIds[i] = vid.Snippet.ChannelId
 	}
-	channelResponse, err := client.Channels.List("statistics").Id(strings.Join(channelIds, ",")).Do()
-	if err != nil {
-		panic(err)
-	}
-	for _, channel := range channelResponse.Items {
+	channels := getChannelData(client, channelIds)
+	for _, channel := range channels {
 		id := channelIdsToVideo[channel.Id]
 		results[id].Subscribers = channel.Statistics.SubscriberCount
 		results[id].ViewSubscriberRation = float64(results[id].ViewCount) / float64(channel.Statistics.SubscriberCount)
@@ -60,11 +53,49 @@ func GetVideoData(devKey string, videoIds []string) map[string]*Video {
 	return results
 }
 
+func getChannelData(service *youtube.Service, channelIds []string) []*youtube.Channel {
+	var channels []*youtube.Channel
+	length := len(channelIds)
+	for i := 0; i < length; i += 10 {
+		end := i + 10
+		if end >= length {
+			end = length
+		}
+		response, err := service.Channels.List("statistics").Id(strings.Join(channelIds[i:end], ",")).Do()
+		if err != nil {
+			fmt.Printf("error listing channels by id (ids: %v) %v ", strings.Join(channelIds, ","), err)
+		}
+		channels = append(channels, response.Items...)
+	}
+	return channels
+}
+
+func getVideos(devKey string, videoIds []string) (*youtube.Service, []*youtube.Video) {
+	client := GetClient(devKey)
+	var videos []*youtube.Video
+	length := len(videoIds)
+	for i := 0; i < length; i += 10 {
+		end := i + 10
+		if end >= length {
+			end = length
+		}
+		response, err := client.Videos.List("snippet,contentDetails,statistics, topicDetails").Id(strings.Join(videoIds[i:end], ",")).Do()
+		if err != nil {
+			fmt.Printf("error listing videos by id (ids: %v) %v ", strings.Join(videoIds, ","), err)
+			panic(err)
+		}
+		videos = append(videos, response.Items...)
+	}
+
+	return client, videos
+}
+
 func getVideoFromResponse(vid *youtube.Video, categories map[string]string, client *youtube.Service) (*Video, map[string]string) {
 	if _, in := categories[vid.Snippet.CategoryId]; !in {
 		catResp, err := client.VideoCategories.List("snippet").Id(vid.Snippet.CategoryId).Do()
 		if err != nil {
-			fmt.Errorf("error getting categorie for video %v %v", vid.Id, err)
+			fmt.Printf("error getting categorie for video %v %v", vid.Id, err)
+			categories[vid.Snippet.CategoryId] = "Error!"
 		}
 		categories[vid.Snippet.CategoryId] = catResp.Items[0].Snippet.Title
 

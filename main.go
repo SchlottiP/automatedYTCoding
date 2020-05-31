@@ -1,6 +1,7 @@
 package main
 
 import (
+	"automatedYTCoding/analysis"
 	"automatedYTCoding/apiadapter"
 	"automatedYTCoding/csv"
 	"errors"
@@ -47,10 +48,25 @@ func main() {
 		listVideos(videoData, fileData, ids, resultPath)
 	case "all":
 		listAllVideos(listCommand, fileData, query, publishedAfter, maxResults, resultPath)
+	case "sentiment":
+		listSentiment(videoData, fileData, ids, resultPath)
 	default:
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
+}
+
+func listSentiment(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, resultPath *string) {
+	videoData.Parse(os.Args[2:])
+	if len(os.Args) == 2 {
+		fileData.Parse(os.Args[3:])
+	}
+	path, err := filepath.Abs(*resultPath + "/sentiment.csv")
+	if err != nil {
+		panic(err)
+	}
+	videoIds := strings.Split(*ids, ",")
+	analysis.SentimentAnalysis(developerKey, videoIds, path)
 }
 
 func listAllVideos(listCommand *flag.FlagSet, fileData *flag.FlagSet, query *string, publishedAfter *string, maxResults *int64, resultPath *string) {
@@ -88,7 +104,7 @@ func listAllVideos(listCommand *flag.FlagSet, fileData *flag.FlagSet, query *str
 	}
 	fmt.Printf("query %v", *query)
 	fmt.Printf("resultFile: %v", path)
-	csv.CreateCSV(path, apiadapter.GetVideoData(developerKey, ids))
+	csv.CreateVideoCSV(path, apiadapter.GetVideoData(developerKey, ids))
 }
 
 func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, resultPath *string) {
@@ -107,7 +123,7 @@ func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, re
 	}
 	fmt.Printf("resultFile: %v", path)
 	idList := strings.Split(*ids, ",")
-	csv.CreateCSV(path, apiadapter.GetVideoData(developerKey, idList))
+	csv.CreateVideoCSV(path, apiadapter.GetVideoData(developerKey, idList))
 }
 
 func list(listCommand *flag.FlagSet, query *string, publishedAfter *string, maxResults *int64) {

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func CreateCSV(filePath string, videos map[string]*apiadapter.Video) {
+func CreateVideoCSV(filePath string, videos map[string]*apiadapter.Video) {
 	file, e := os.Create(filePath)
 	if e != nil {
 		panic(e)
@@ -40,6 +40,26 @@ func CreateCSV(filePath string, videos map[string]*apiadapter.Video) {
 		writer.Write(row)
 	}
 
+}
+
+func CreateCSV(filePath string, values map[string]int) {
+	file, e := os.Create(filePath)
+	if e != nil {
+		panic(e)
+	}
+	defer file.Close()
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	var row []string
+	// HEADER
+	row = append(row, "id", "sentiment")
+	writer.Write(row)
+	for id, sentiment := range values {
+		row = make([]string, 2)
+		row[0] = id
+		row[1] = strconv.Itoa(sentiment)
+		writer.Write(row)
+	}
 }
 
 func getData(val reflect.Value, index int) string {

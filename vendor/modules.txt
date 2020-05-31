@@ -1,5 +1,10 @@
 # cloud.google.com/go v0.57.0
 cloud.google.com/go/compute/metadata
+# github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
+github.com/cdipaolo/goml/base
+github.com/cdipaolo/goml/text
+# github.com/cdipaolo/sentiment v0.0.0-20170111084539-5ab0aec020b4
+github.com/cdipaolo/sentiment
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.4.1
@@ -46,10 +51,10 @@ golang.org/x/oauth2/jwt
 golang.org/x/sys/unix
 golang.org/x/sys/internal/unsafeheader
 # golang.org/x/text v0.3.2
+golang.org/x/text/transform
 golang.org/x/text/secure/bidirule
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-golang.org/x/text/transform
 # google.golang.org/api v0.24.0
 google.golang.org/api/googleapi/transport
 google.golang.org/api/youtube/v3

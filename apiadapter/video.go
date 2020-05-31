@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// Video contains all Data needed for a regression analysis based on youtube videos
 type Video struct {
 	Id                   string
 	DurationInSeconds    int
@@ -51,23 +52,6 @@ func GetVideoData(devKey string, videoIds []string) map[string]*Video {
 	}
 
 	return results
-}
-
-func getChannelData(service *youtube.Service, channelIds []string) []*youtube.Channel {
-	var channels []*youtube.Channel
-	length := len(channelIds)
-	for i := 0; i < length; i += 10 {
-		end := i + 10
-		if end >= length {
-			end = length
-		}
-		response, err := service.Channels.List("statistics").Id(strings.Join(channelIds[i:end], ",")).Do()
-		if err != nil {
-			fmt.Printf("error listing channels by id (ids: %v) %v ", strings.Join(channelIds, ","), err)
-		}
-		channels = append(channels, response.Items...)
-	}
-	return channels
 }
 
 func getVideos(devKey string, videoIds []string) (*youtube.Service, []*youtube.Video) {

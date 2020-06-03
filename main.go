@@ -104,7 +104,15 @@ func listAllVideos(listCommand *flag.FlagSet, fileData *flag.FlagSet, query *str
 	}
 	fmt.Printf("query %v", *query)
 	fmt.Printf("resultFile: %v", path)
-	csv.CreateVideoCSV(path, apiadapter.GetVideoData(developerKey, ids))
+	csv.CreateCSV(path, makeInterfaceSlice(apiadapter.GetVideoData(developerKey, ids)))
+}
+
+func makeInterfaceSlice(data map[string]*apiadapter.Video) []interface{} {
+	var res []interface{}
+	for _, v := range data {
+		res = append(res, v)
+	}
+	return res
 }
 
 func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, resultPath *string) {
@@ -123,7 +131,7 @@ func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, re
 	}
 	fmt.Printf("resultFile: %v", path)
 	idList := strings.Split(*ids, ",")
-	csv.CreateVideoCSV(path, apiadapter.GetVideoData(developerKey, idList))
+	csv.CreateCSV(path, makeInterfaceSlice(apiadapter.GetVideoData(developerKey, idList)))
 }
 
 func list(listCommand *flag.FlagSet, query *string, publishedAfter *string, maxResults *int64) {

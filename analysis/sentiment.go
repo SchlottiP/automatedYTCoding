@@ -11,5 +11,9 @@ func SentimentAnalysis(devKey string, ids []string, filePath string) {
 		comments[id], _ = apiadapter.GetVideoComments(devKey, id)
 	}
 	result := getSentimentValue(comments)
-	csv.CreateCSV(filePath, result)
+	var resultAsInterface []interface{}
+	for _, v := range result {
+		resultAsInterface = append(resultAsInterface, v)
+	}
+	csv.CreateCSV(filePath, resultAsInterface)
 }

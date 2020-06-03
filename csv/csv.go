@@ -1,7 +1,6 @@
 package csv
 
 import (
-	"automatedYTCoding/apiadapter"
 	"encoding/csv"
 	"os"
 	"reflect"
@@ -9,7 +8,7 @@ import (
 	"strings"
 )
 
-func CreateVideoCSV(filePath string, videos map[string]*apiadapter.Video) {
+func CreateCSV(filePath string, values []interface{}) {
 	file, e := os.Create(filePath)
 	if e != nil {
 		panic(e)
@@ -19,8 +18,8 @@ func CreateVideoCSV(filePath string, videos map[string]*apiadapter.Video) {
 	defer writer.Flush()
 	var row []string
 	// HEADER
-	for _, video := range videos {
-		val := reflect.Indirect(reflect.ValueOf(video))
+	for _, val := range values {
+		val := reflect.Indirect(reflect.ValueOf(val))
 		row = make([]string, val.Type().NumField())
 		for i := 0; i < val.Type().NumField(); i++ {
 			row[i] = val.Type().Field(i).Name
@@ -29,8 +28,8 @@ func CreateVideoCSV(filePath string, videos map[string]*apiadapter.Video) {
 		break
 	}
 	// ROWS
-	for _, video := range videos {
-		val := reflect.Indirect(reflect.ValueOf(video))
+	for _, val := range values {
+		val := reflect.Indirect(reflect.ValueOf(val))
 		for i := 0; i < val.Type().NumField(); i++ {
 			row = make([]string, val.Type().NumField())
 			for i := 0; i < val.Type().NumField(); i++ {
@@ -40,26 +39,6 @@ func CreateVideoCSV(filePath string, videos map[string]*apiadapter.Video) {
 		writer.Write(row)
 	}
 
-}
-
-func CreateCSV(filePath string, values map[string]int) {
-	file, e := os.Create(filePath)
-	if e != nil {
-		panic(e)
-	}
-	defer file.Close()
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-	var row []string
-	// HEADER
-	row = append(row, "id", "sentiment")
-	writer.Write(row)
-	for id, sentiment := range values {
-		row = make([]string, 2)
-		row[0] = id
-		row[1] = strconv.Itoa(sentiment)
-		writer.Write(row)
-	}
 }
 
 func getData(val reflect.Value, index int) string {
@@ -81,5 +60,4 @@ func getData(val reflect.Value, index int) string {
 	default:
 		return val.Field(index).String()
 	}
-	return ""
 }

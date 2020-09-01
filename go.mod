@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.57.0 // indirect
+	github.com/biter777/countries v1.3.2
 	github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598 // indirect
 	github.com/cdipaolo/sentiment v0.0.0-20170111084539-5ab0aec020b4
 	github.com/golang/protobuf v1.4.1 // indirect

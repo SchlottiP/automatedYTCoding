@@ -2,24 +2,43 @@ package apiadapter
 
 import (
 	"fmt"
+	"github.com/biter777/countries"
 	"google.golang.org/api/youtube/v3"
 	"log"
+	"strings"
 	"time"
 )
 
+type VideoData struct {
+	Id           string
+	SearchKey    string
+	Title        string
+	Description  string
+	PublishedAt  string
+	ChannelTitle string
+	ChannelId    string
+	nr           int
+}
+
 // List uses keywords, maxResult and if present publishedAfter
-// Defaults: order for viewCount, videoduration medium (4-20 min), relevance language: English
-func List(developerKey string, keywords string, maxResult int64, publishedAfter *time.Time, toPrint bool) []*youtube.SearchResult {
+// Defaults: order for viewCount, region Code: US
+func List(developerKey string, keywords string, maxResult int64, publishedAfter *time.Time) []*VideoData {
 
 	service := GetClient(developerKey)
+	keywordsList := strings.Split(keywords, ";")
+	var resultData []*VideoData
 
 	// Make the API call to YouTube.
-	part := "id"
-	if toPrint {
-		part += ",snippet"
+	for _, word := range keywordsList {
+		resultData = append(resultData, makeCall(service, word, publishedAfter, maxResult)...)
 	}
+	return resultData
+}
+
+func makeCall(service *youtube.Service, keywords string, publishedAfter *time.Time, maxResult int64) []*VideoData {
+	part := "id, snippet"
 	call := service.Search.List(part).
-		Q(keywords).Order("viewCount").VideoDuration("medium").RelevanceLanguage("en").Type("video")
+		Q(keywords).Order("viewCount").Type("video").RegionCode(countries.US.Alpha2())
 	if publishedAfter != nil {
 		fmt.Printf("after: %v %v", publishedAfter.Format(time.RFC822), publishedAfter.Format(time.RFC3339))
 		call.PublishedAfter(publishedAfter.Format(time.RFC3339))
@@ -28,35 +47,38 @@ func List(developerKey string, keywords string, maxResult int64, publishedAfter 
 	if err != nil {
 		log.Fatalf("Error requesting Api: %v", err)
 	}
-	if response.PageInfo.ResultsPerPage >= maxResult {
-		return response.Items
-	}
 	var results []*youtube.SearchResult
-	results = append(results, response.Items...)
-	for int64(len(results)) < maxResult {
-		response, err = call.PageToken(response.NextPageToken).Do()
-		if err != nil {
-			log.Fatalf("Error requesting Api: %v", err)
+	if response.PageInfo.ResultsPerPage >= maxResult {
+		results = response.Items
+	} else {
+		results = append(results, response.Items...)
+		for int64(len(results)) < maxResult {
+			response, err = call.PageToken(response.NextPageToken).Do()
+			if err != nil {
+				log.Fatalf("Error requesting Api: %v", err)
+			}
+			missing := maxResult - int64(len(results))
+			if missing >= response.PageInfo.ResultsPerPage {
+				results = append(results, response.Items...)
+			} else {
+				results = append(results, response.Items[0:missing]...)
+			}
 		}
-		missing := maxResult - int64(len(results))
-		if missing >= response.PageInfo.ResultsPerPage {
-			results = append(results, response.Items...)
-		} else {
-			results = append(results, response.Items[0:missing]...)
-		}
 	}
-	return results
-}
-
-func PrintIDs(items []*youtube.SearchResult) {
-	videos := make(map[string]string)
-	// Iterate through each item and add it to the correct apiadapter.
-	for _, item := range items {
-		videos[item.Id.VideoId] = item.Snippet.Title + " published: " + item.Snippet.PublishedAt
+	nr := 1
+	formated := make([]*VideoData, len(results))
+	for _, res := range results {
+		formated = append(formated, &VideoData{
+			Id:           res.Id.VideoId,
+			SearchKey:    keywords,
+			Title:        res.Snippet.Title,
+			Description:  res.Snippet.Description,
+			PublishedAt:  res.Snippet.PublishedAt,
+			ChannelTitle: res.Snippet.ChannelTitle,
+			ChannelId:    res.Snippet.ChannelId,
+			nr:           nr,
+		})
+		nr++
 	}
-
-	for id, title := range videos {
-		fmt.Printf("[%v] %v\n", id, title)
-	}
-	fmt.Printf("\n\n")
+	return formated
 }

@@ -1,5 +1,7 @@
 # cloud.google.com/go v0.57.0
 cloud.google.com/go/compute/metadata
+# github.com/biter777/countries v1.3.2
+github.com/biter777/countries
 # github.com/cdipaolo/goml v0.0.0-20190412180403-e1f51f713598
 github.com/cdipaolo/goml/base
 github.com/cdipaolo/goml/text

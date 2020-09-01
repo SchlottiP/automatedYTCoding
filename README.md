@@ -15,9 +15,10 @@ To run any command the developer key of the youtube api is needed (in the enviro
 Quota impact = 100 units 
 
 Lists videos with id, date and title
-- query: Searchterm.  | and - allowed (required)
+- Keywords, splitted by ";"
 - after: search for videos after this date. Format: "DD.MM.YYYY"
 - maxResults: max. amount of results, default 25, uses pagination and not the query parameter of the youtube api (because the api only allows up to 50 videos as maxResult value)
+- path:  path of the folder for the result file (result.csv), default: Temp Folder
 
 ### videos
 Quota impact =2+2+2+2+2= 10 per video and 2 per Video Category 
@@ -27,12 +28,6 @@ Videos are ordered by views, default language is english, and the videos have me
 - ids: list of ids "id1,id2" (required)
 - path: path of the folder for the result file (result.csv), default: Temp Folder
 
-### all
-Quota impact: videos + list
-
-Combines list and video command: First search for videos, then uses the resulting ids to list the video information for each video in a csv file. 
-- path:  path of the folder for the result file (result.csv), default: Temp Folder
-- query, after and maxResult, see list command
 
 ### sentiment
 Quota impact: 2 per video

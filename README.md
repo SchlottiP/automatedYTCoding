@@ -12,19 +12,19 @@ uses the youtube api v3 (https://developers.google.com/youtube/v3/docs)
 ## Commands
 To run any command the developer key of the youtube api is needed (in the environment `devkey=XXX`) (See https://developers.google.com/youtube/v3/getting-started)
 ### list
-Quota impact = 100 units 
+Quota impact = 100 units (per searchterm & 50 results)
 
-Lists videos with id, date and title
+Searches all Videos 
 - Keywords, splitted by ";"
 - after: search for videos after this date. Format: "DD.MM.YYYY"
 - maxResults: max. amount of results, default 25, uses pagination and not the query parameter of the youtube api (because the api only allows up to 50 videos as maxResult value)
-- path:  path of the folder for the result file (result.csv), default: Temp Folder
+- path:  path of the folder for the result file (searchResult.csv), default: Temp Folder
 
 ### videos
 Quota impact =2+2+2+2+2= 10 per video and 2 per Video Category 
 
 Lists the video information for each video in a csv file. 
-Videos are ordered by views, default language is english, and the videos have medium length (4-20min)
+Videos are ordered by views, regio US
 - ids: list of ids "id1,id2" (required)
 - path: path of the folder for the result file (result.csv), default: Temp Folder
 

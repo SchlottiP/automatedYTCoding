@@ -38,7 +38,7 @@ func List(developerKey string, keywords string, maxResult int64, publishedAfter 
 func makeCall(service *youtube.Service, keywords string, publishedAfter *time.Time, maxResult int64) []*VideoData {
 	part := "id, snippet"
 	call := service.Search.List(part).
-		Q(keywords).Order("viewCount").Type("video").RegionCode(countries.US.Alpha2())
+		Q(keywords).Order("viewCount").MaxResults(50).Type("video").RegionCode(countries.US.Alpha2())
 	if publishedAfter != nil {
 		fmt.Printf("after: %v %v", publishedAfter.Format(time.RFC822), publishedAfter.Format(time.RFC3339))
 		call.PublishedAfter(publishedAfter.Format(time.RFC3339))

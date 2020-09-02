@@ -19,6 +19,9 @@ func CreateCSV(filePath string, values []interface{}) {
 	var row []string
 	// HEADER
 	for _, val := range values {
+		if val == nil {
+			continue
+		}
 		val := reflect.Indirect(reflect.ValueOf(val))
 		row = make([]string, val.Type().NumField())
 		for i := 0; i < val.Type().NumField(); i++ {
@@ -29,6 +32,9 @@ func CreateCSV(filePath string, values []interface{}) {
 	}
 	// ROWS
 	for _, val := range values {
+		if val == nil {
+			continue
+		}
 		val := reflect.Indirect(reflect.ValueOf(val))
 		for i := 0; i < val.Type().NumField(); i++ {
 			row = make([]string, val.Type().NumField())

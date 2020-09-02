@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/biter777/countries"
 	"google.golang.org/api/youtube/v3"
-	"log"
 	"strings"
 	"time"
 )
@@ -43,42 +42,45 @@ func makeCall(service *youtube.Service, keywords string, publishedAfter *time.Ti
 		fmt.Printf("after: %v %v", publishedAfter.Format(time.RFC822), publishedAfter.Format(time.RFC3339))
 		call.PublishedAfter(publishedAfter.Format(time.RFC3339))
 	}
+	formated := make([]*VideoData, maxResult)
 	response, err := call.Do()
 	if err != nil {
-		log.Fatalf("Error requesting Api: %v", err)
+		fmt.Printf("Error requesting Api: %v", err)
+		return formated
 	}
-	var results []*youtube.SearchResult
+
+	nr := 1
 	if response.PageInfo.ResultsPerPage >= maxResult {
-		results = response.Items
+		for _, res := range response.Items {
+			formated = append(formated, searchResultToVideoDate(res, nr, keywords))
+			nr++
+		}
 	} else {
-		results = append(results, response.Items...)
-		for int64(len(results)) < maxResult {
+		for int64(nr) < maxResult {
 			response, err = call.PageToken(response.NextPageToken).Do()
 			if err != nil {
-				log.Fatalf("Error requesting Api: %v", err)
+
+				fmt.Printf("Error requesting Api: %v", err)
+				return formated
 			}
-			missing := maxResult - int64(len(results))
-			if missing >= response.PageInfo.ResultsPerPage {
-				results = append(results, response.Items...)
-			} else {
-				results = append(results, response.Items[0:missing]...)
+			for _, res := range response.Items {
+				formated = append(formated, searchResultToVideoDate(res, nr, keywords))
+				nr++
 			}
 		}
 	}
-	nr := 1
-	formated := make([]*VideoData, len(results))
-	for _, res := range results {
-		formated = append(formated, &VideoData{
-			Id:           res.Id.VideoId,
-			SearchKey:    keywords,
-			Title:        res.Snippet.Title,
-			Description:  res.Snippet.Description,
-			PublishedAt:  res.Snippet.PublishedAt,
-			ChannelTitle: res.Snippet.ChannelTitle,
-			ChannelId:    res.Snippet.ChannelId,
-			nr:           nr,
-		})
-		nr++
-	}
 	return formated
+}
+
+func searchResultToVideoDate(res *youtube.SearchResult, nr int, keywords string) *VideoData {
+	return &VideoData{
+		Id:           res.Id.VideoId,
+		SearchKey:    keywords,
+		Title:        res.Snippet.Title,
+		Description:  res.Snippet.Description,
+		PublishedAt:  res.Snippet.PublishedAt,
+		ChannelTitle: res.Snippet.ChannelTitle,
+		ChannelId:    res.Snippet.ChannelId,
+		nr:           nr,
+	}
 }

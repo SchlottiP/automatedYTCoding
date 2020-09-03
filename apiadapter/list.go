@@ -42,7 +42,7 @@ func makeCall(service *youtube.Service, keywords string, publishedAfter *time.Ti
 		fmt.Printf("after: %v %v", publishedAfter.Format(time.RFC822), publishedAfter.Format(time.RFC3339))
 		call.PublishedAfter(publishedAfter.Format(time.RFC3339))
 	}
-	formated := make([]*VideoData, maxResult)
+	var formated []*VideoData
 	response, err := call.Do()
 	if err != nil {
 		fmt.Printf("Error requesting Api: %v", err)

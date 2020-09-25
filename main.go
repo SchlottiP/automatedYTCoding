@@ -54,17 +54,18 @@ func main() {
 	}
 }
 
-func listSentiment(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, resultPath *string) {
-	videoData.Parse(os.Args[2:])
+func listSentiment(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, folderForResult *string) {
+	_ = videoData.Parse(os.Args[2:])
 	if len(os.Args) == 2 {
-		fileData.Parse(os.Args[3:])
+		_ = fileData.Parse(os.Args[3:])
 	}
-	path, err := filepath.Abs(*resultPath + "/sentiment.csv")
+	result, err := filepath.Abs(*folderForResult + "/sentiment.csv")
+	commentPath, err := filepath.Abs(*folderForResult + "/comments.csv")
 	if err != nil {
 		panic(err)
 	}
 	videoIds := strings.Split(*ids, ",")
-	analysis.SentimentAnalysis(developerKey, videoIds, path)
+	analysis.SentimentAnalysis(developerKey, videoIds, result, commentPath)
 }
 
 func makeInterfaceSliceVideo(data map[string]*apiadapter.Video) []interface{} {
@@ -84,8 +85,8 @@ func makeInterfaceSliceSearch(data []*apiadapter.VideoData) []interface{} {
 
 func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, resultPath *string) {
 	//FIRST VIDEO THEN FILE INFORMATION!
-	videoData.Parse(os.Args[2:])
-	fileData.Parse(os.Args[3:])
+	_ = videoData.Parse(os.Args[2:])
+	_ = fileData.Parse(os.Args[3:])
 
 	// Required Flags
 	if *ids == "" {
@@ -102,7 +103,7 @@ func listVideos(videoData *flag.FlagSet, fileData *flag.FlagSet, ids *string, re
 }
 
 func list(listCommand *flag.FlagSet, resultPath *string, query *string, publishedAfter *string, maxResults *int64) {
-	listCommand.Parse(os.Args[2:])
+	_ = listCommand.Parse(os.Args[2:])
 
 	// Required Flags
 	if *query == "" {
@@ -112,12 +113,11 @@ func list(listCommand *flag.FlagSet, resultPath *string, query *string, publishe
 	//optional
 	var after *time.Time
 	if *publishedAfter != "" {
-		time, err := time.Parse("02.01.2006", *publishedAfter)
+		date, err := time.Parse("02.01.2006", *publishedAfter)
 		if err != nil {
-			fmt.Errorf("published After Date is not valid. Format: DD.MM.YYYY")
-			os.Exit(1)
+			panic(fmt.Errorf("published After Date is not valid. Format: DD.MM.YYYY"))
 		}
-		after = &time
+		after = &date
 	}
 	path, err := filepath.Abs(*resultPath + "/searchResult.csv")
 	if err != nil {

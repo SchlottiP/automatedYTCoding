@@ -56,10 +56,15 @@ func makeCall(service *youtube.Service, keywords string, publishedAfter *time.Ti
 			nr++
 		}
 	} else {
+		//Data of first page
+		for _, res := range response.Items {
+			formated = append(formated, searchResultToVideoDate(res, nr, keywords))
+			nr++
+		}
+		//other pages
 		for int64(nr) < maxResult {
 			response, err = call.PageToken(response.NextPageToken).Do()
 			if err != nil {
-
 				fmt.Printf("Error requesting Api: %v", err)
 				return formated
 			}

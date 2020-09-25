@@ -4,10 +4,7 @@
         <working_directory value="$PROJECT_DIR$/"/>
         <go_parameters value="-i"/>
         <parameters
-                value="list -query &quot;genetic testing ; ancestry testing ; 23andMe ; DNA testing ; home genetic testing ; direct to consumer genetic testing&quot; -max-results 250 -after &quot;01.01.2015&quot;"/>
-        <envs>
-            <env name="devkey" value="AIzaSyCH6bK9nyITLzIAUUkHSZuaB9YC36-vSmc "/>
-        </envs>
+                value="list -query &quot;genetic testing;ancestry testing;23andMe;DNA testing;home genetic testing;direct to consumer genetic testing&quot; -max-results 250 -after &quot;01.01.2015&quot;"/>
         <EXTENSION ID="net.ashald.envfile">
             <option name="IS_ENABLED" value="false"/>
             <option name="IS_SUBST" value="false"/>

@@ -27,7 +27,7 @@ func CreateCSV(filePath string, values []interface{}) {
 		for i := 0; i < val.Type().NumField(); i++ {
 			row[i] = val.Type().Field(i).Name
 		}
-		writer.Write(row)
+		_ = writer.Write(row)
 		break
 	}
 	// ROWS
@@ -42,7 +42,7 @@ func CreateCSV(filePath string, values []interface{}) {
 				row[i] = getData(val, i)
 			}
 		}
-		writer.Write(row)
+		_ = writer.Write(row)
 	}
 
 }
@@ -51,6 +51,10 @@ func getData(val reflect.Value, index int) string {
 	switch val.Field(index).Kind() {
 	case reflect.Uint64:
 		return strconv.FormatInt(int64(val.Field(index).Uint()), 10)
+	case reflect.Int64:
+		return strconv.FormatInt(int64(val.Field(index).Uint()), 10)
+	case reflect.Bool:
+		return strconv.FormatBool(val.Field(index).Bool())
 	case reflect.Int:
 		return strconv.FormatInt(val.Field(index).Int(), 10)
 	case reflect.Float64:

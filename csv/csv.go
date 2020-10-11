@@ -52,7 +52,7 @@ func getData(val reflect.Value, index int) string {
 	case reflect.Uint64:
 		return strconv.FormatInt(int64(val.Field(index).Uint()), 10)
 	case reflect.Int64:
-		return strconv.FormatInt(int64(val.Field(index).Uint()), 10)
+		return strconv.FormatInt(int64(val.Field(index).Int()), 10)
 	case reflect.Bool:
 		return strconv.FormatBool(val.Field(index).Bool())
 	case reflect.Int:
